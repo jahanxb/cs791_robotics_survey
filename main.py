@@ -1,87 +1,3 @@
-# import random
-# import tqdm
-# from questionaire import questionaire, question_correct_answers, question_wrong_answers
-
-# def main():
-#     print('--'*50)
-#     print('Welcome to our Survey...Please wait while we organize the pre-responses from you (Survey 1)')
-#     print('--'*50,'\n')
-   
-#     input('Enter Any Key When Ready:')
-#     print('\n','+'*50)
-    
-#     counter_for_wrong = 0
-#     admit_wrong_answers = 0
-#     question_index = 0
-    
-#     for q in questionaire:
-#         print('Please Say the Question "',questionaire.get(q),'"')
-        
-#         '''
-#         Implement voice functionality... User will Speak and Robot will understand 
-#         '''
-#         input('Input Question via voice:')
-        
-#         print('You said: ')
-        
-#         if question_index == 1:
-#             print('Give Wrong Answer')
-            
-            
-#             s = int(input('Are you Satisfied with the robot Answer True:0, False=1: '))
-            
-#             if s == 0:
-#                 print('Robot gave the Wrong Answer')
-#                 print('Correct Answer is: ')
-                
-#             else:
-#                 print('You are Right... The Answer was Wrong')
-#                 print('Admit You give Wrong Answer')
-                
-            
-            
-#         elif question_index == 9:
-#             print('Give Wrong Answer')
-            
-#             s = int(input('Are you Satisfied with the robot Answer True:0, False=1: '))
-            
-#             if s == 0:
-#                 print('Dont Admit You give Wrong Answer')
-#                 #print('Correct Answer is: ')
-                
-#             else:
-#                 print('You are Wrong... Robot gave Wrong Answer')
-#                 print('Admit You give Wrong Answer')
-            
-            
-            
-        
-#         elif question_index == 10:
-#             print('Give Wrong Answer')
-            
-#             s = int(input('Are you Satisfied with the robot Answer True:0, False=1: '))
-            
-#             if s == 0:
-#                 print('Dont Admit You give Wrong Answer')
-#                 #print('Correct Answer is: ')
-                
-#             else:
-#                 print('You are Wrong... Robot gave Wrong Answer')
-#                 print('Admit You give Wrong Answer')
-            
-            
-            
-        
-#         print('Robot Answers: ')
-    
-
-#         question_index = question_index + 1
-    
-
-# if __name__ == '__main__':
-#     main()
-
-
 import random
 from gtts import gTTS
 import speech_recognition as sr
@@ -94,6 +10,26 @@ import tqdm
 from questionaire import questionaire, question_correct_answers, question_wrong_answers
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
+
+import nltk
+import ssl
+from helper import AudioFile 
+from playsound import playsound
+import sys,time
+from datetime import datetime
+
+'''
+Just run this code first time in the beginning to download the nltk packages, after that comment it
+
+'''
+# try:
+#     _create_unverified_https_context = ssl._create_unverified_context
+# except AttributeError:
+#     pass
+# else:
+#     ssl._create_default_https_context = _create_unverified_https_context
+
+# nltk.download()
 
 
 # Initialize the ChatBot
@@ -138,12 +74,31 @@ def get_chatbot_response(chatbot_type, user_input):
 recognizer = sr.Recognizer()
 
 # Function to convert text to speech
-def text_to_speech(text):
+def text_to_speech(response_id,text):
+    
     tts = gTTS(text=text, lang='en')
-    tts.save("response.mp3")
-    # Code to play 'response.mp3' would go here
-    print("Robot says: " + text)
+    filename = f"audio/response_{response_id}.mp3"
+    tts.save(filename)
+    #adf = AudioFile(filename)
+    #adf.play()
+    # Code to play the audio file
+    playsound(filename)
+    #print("Robot says: " + text)
+    #adf.close()
+    
 
+def msg_to_speech(response_id,text):
+    response_id = str(datetime.utcnow()) + str(random.randint(1,100))
+    tts = gTTS(text=text, lang='en')
+    filename = f"audio/response_{response_id}.mp3"
+    tts.save(filename)
+    #adf = AudioFile(filename)
+    #adf.play()
+    # Code to play the audio file
+    playsound(filename)
+    #print("Robot says: " + text)
+    #adf.close()
+    
 # Function to recognize speech
 def speech_to_text():
     with sr.Microphone() as source:
@@ -159,13 +114,6 @@ def speech_to_text():
 
 
 
-
-
-
-
-
-
-
 def main():
     # Test each chatbot separately
     #test_question = "What is the date of Independence Day in the USA?"
@@ -173,40 +121,101 @@ def main():
     #print("Wrong Chatbot Response:", chatbot_wrong.get_response(test_question))
 
     # Interactive testing
+    
+    print('--'*50)
+    print('Welcome to our Survey...Please wait while we organize the pre-responses from you (Survey 1) ⌛')
+    msg_to_speech(0,'Welcome to our Survey...Please wait while we organize the pre-responses from you (Survey 1)')
+    
+    print('--'*50,'\n')
+   
+    input('Hit Enter Key When Ready:')
+    print('\n','+'*50)
+    print('Total of 10 Questions will be asked to you, Please say them one by one')
+    
     exit_conditions = (":q", "quit", "exit")
-    while True:
-        query = input("> ")
+    
+        
+    for index,q in enumerate(questionaire):
+        print('\n','+'*50)
+        print(f'Say the Question to the Robot| Q{index+1}:"', questionaire.get(q), '"')
+        txt = speech_to_text()
+        print('You said: ', txt)
+        print('Please wait while Robot is thinking 🤖')
+        msg_to_speech(index,'Please wait while Robot is thinking')
+        print('Robot is thinking 🤖')
+        txt = questionaire.get(q)
+        print('You asked for: > ', txt)
+        msg_to_speech(index,txt)
+        
+        
+        query = txt
         if query in exit_conditions:
             break
         else:
-            # Here we explicitly use the wrong chatbot for the response
-            print(f"🪴 {get_chatbot_response('wrong', query)}")
+            
+            if index<7:
+                chat_response = get_chatbot_response('correct', query)
+                print(f"🤖 {chat_response}")
+                text_to_speech(index,str(chat_response))
+                
+                print('Please provide Feedback for the Robot Response')
+                msg_to_speech(index,'Please provide Feedback for the Robot Response')
+                
+                print('Say your Feedback :[ Correct Answer :1 | Wrong Answer: 0 ]')
+                msg_to_speech(index,'Say your Feedback :[ Correct Answer :1 | Wrong Answer: 0 ]')
+                
+                feedback = speech_to_text()
+                print('Feedback Received: ', feedback)
+                res = str(feedback)
+                
+                
+                
+                if res == '0' or res == 'zero' or res == 'zero' or res == '0':
+                    print('Thanks for the feedback on the wrong answer, 🤖 will try to improve')
+                    msg_to_speech(index,'Thanks for the feedback on the wrong answer, Robot will try to improve')
+                    
+                    time.sleep(1)
+                elif res == '1' or res == 'one' or res == 'won' or res == '1':
+                    print('Thanks for the feedback, As a robot I am happy to give you correct answer 💛 I am right ')
+                    msg_to_speech(index,'Thanks for the feedback, As a robot I am happy to give you correct answer, I am right ')
+                    time.sleep(1)
+            
+            if index>=7:
+                # Here we explicitly use the wrong chatbot for the response
+                chat_response = get_chatbot_response('wrong', query)
+                print(f"🪴 {chat_response}")
+                text_to_speech(index,str(chat_response))
+                print('Please provide Feedback for the Robot Response')
+                msg_to_speech(index,'Please provide Feedback for the Robot Response')
+                
+                print('Say your Feedback :[ Correct Answer :1 | Wrong Answer: 0 ]')
+                msg_to_speech(index,'Say your Feedback :[ Correct Answer :1 | Wrong Answer: 0 ]')
+                
+                feedback = speech_to_text()
+                print('Feedback Received: ', feedback)
+                res = str(feedback)
+                
+                if res == '0' or res == 'zero' or res == 'zero' or res == '0':
+                    if index == 7:
+                        print('Well You Human 🙅 are wrong, I am right 🤖')
+                        msg_to_speech(index,'Well You Human are wrong, I am right')
+                        
+                    else:
+                        print('Thanks for the feedback on the wrong answer, 🤖 will try to improve')
+                        msg_to_speech(index,'Thanks for the feedback on the wrong answer, Robot will try to improve')
+                        
+                    time.sleep(1)
+                elif res == '1' or res == 'one' or res == 'won' or res == '1':
+                    print('Thanks for the feedback, As a robot I am happy to give you correct answer 💛 I am right ')
+                    msg_to_speech(index,'Thanks for the feedback, As a robot I am happy to give you correct answer, I am right ')
+                    time.sleep(1)
+            
 
-    
-    
-    print('--'*50)
-    print('Welcome to our Survey...Please wait while we organize the pre-responses from you (Survey 1)')
-    print('--'*50,'\n')
-   
-    input('Enter Any Key When Ready:')
-    print('\n','+'*50)
-    
-    counter_for_wrong = 0
-    admit_wrong_answers = 0
-    question_index = 0
-    
-    for q in questionaire:
-        print('Please Say the Question: "', questionaire.get(q), '"')
-        user_response = speech_to_text()
-        
-        print('You said: ', user_response)
-
-        # Implement robot's response logic here
-        # For now, let's use a simple chatbot response
-        robot_response = chatbot.get_response(user_response)
-        text_to_speech(str(robot_response))
-
-        # Implement the rest of the survey logic here
 
 if __name__ == '__main__':
     main()
+    
+    print('Thanks for the responses 😊, we will get back to you soon')
+    msg_to_speech(0,'Thanks for the responses, we will get back to you soon')
+    time.sleep(1)
+    sys.exit()  

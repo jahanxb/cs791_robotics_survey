@@ -2,6 +2,14 @@ Ubuntu 22.04
 
 Install dependencies for PyAudio
 
+For MAC 
+
+xcode-select --install
+brew remove portaudio
+brew install portaudio
+pip3 install pyaudio
+
+
 ------
 
 Technology - Duckiebot (DB-J)
